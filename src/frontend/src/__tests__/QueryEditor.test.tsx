@@ -7,14 +7,16 @@ import QueryEditor from '../components/QueryEditor';
 // Wrapper to provide controlled sql state for tests that need typing
 const ControlledQueryEditor: React.FC<{
   onExecute: (sql: string, limit: number) => void;
+  onShowHistory?: () => void;
   affectedRows: null | number;
-}> = ({ onExecute, affectedRows }) => {
+}> = ({ onExecute, onShowHistory, affectedRows }) => {
   const [sql, setSql] = React.useState('');
   return (
     <QueryEditor
       sql={sql}
       onSqlChange={setSql}
       onExecute={onExecute}
+      onShowHistory={onShowHistory ?? vi.fn()}
       affectedRows={affectedRows}
     />
   );
@@ -23,7 +25,7 @@ const ControlledQueryEditor: React.FC<{
 describe('QueryEditor', () => {
   it('renders SQL textarea, limit input, and execute button', () => {
     render(
-      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} affectedRows={null} />
+      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} onShowHistory={vi.fn()} affectedRows={null} />
     );
     expect(screen.getByPlaceholderText('SELECT * FROM table_name;')).toBeInTheDocument();
     expect(screen.getByTestId('execute-button')).toBeInTheDocument();
@@ -32,7 +34,7 @@ describe('QueryEditor', () => {
 
   it('has default limit value of 100', () => {
     render(
-      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} affectedRows={null} />
+      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} onShowHistory={vi.fn()} affectedRows={null} />
     );
     const limitInput = screen.getByLabelText('件数');
     expect(limitInput).toHaveValue('100');
@@ -49,7 +51,7 @@ describe('QueryEditor', () => {
 
   it('rejects non-numeric limit input', async () => {
     render(
-      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} affectedRows={null} />
+      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} onShowHistory={vi.fn()} affectedRows={null} />
     );
     const limitInput = screen.getByLabelText('件数');
     await userEvent.clear(limitInput);
@@ -62,7 +64,7 @@ describe('QueryEditor', () => {
 
   it('rejects negative limit input', async () => {
     render(
-      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} affectedRows={null} />
+      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} onShowHistory={vi.fn()} affectedRows={null} />
     );
     const limitInput = screen.getByLabelText('件数');
     await userEvent.clear(limitInput);
@@ -79,5 +81,26 @@ describe('QueryEditor', () => {
     await userEvent.type(sqlInput, 'SELECT 1');
     await userEvent.click(screen.getByText('実行'));
     expect(mockExecute).toHaveBeenCalledWith('SELECT 1', 100);
+  });
+
+  it('renders show history button next to execute button', () => {
+    render(
+      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} onShowHistory={vi.fn()} affectedRows={null} />
+    );
+    const executeButton = screen.getByTestId('execute-button');
+    const historyButton = screen.getByTestId('show-history-button');
+    expect(historyButton).toBeInTheDocument();
+    expect(screen.getByText('履歴を表示')).toBeInTheDocument();
+    // Both buttons share the same parent flex container
+    expect(executeButton.parentElement).toBe(historyButton.parentElement);
+  });
+
+  it('calls onShowHistory when show history button is clicked', async () => {
+    const mockShowHistory = vi.fn();
+    render(
+      <QueryEditor sql="" onSqlChange={vi.fn()} onExecute={vi.fn()} onShowHistory={mockShowHistory} affectedRows={null} />
+    );
+    await userEvent.click(screen.getByText('履歴を表示'));
+    expect(mockShowHistory).toHaveBeenCalledTimes(1);
   });
 });

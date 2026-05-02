@@ -14,3 +14,13 @@ class QueryResultResponse(BaseModel):
     columns: list[str]
     rows: list[dict[str, object]]
     affected_rows: Optional[int] = None
+
+
+class QueryHistoryRequest(BaseModel):
+    connection: ConnectionInfo
+    database_name: str
+
+
+class QueryHistoryResponse(BaseModel):
+    columns: list[str]
+    rows: list[dict[str, object]]

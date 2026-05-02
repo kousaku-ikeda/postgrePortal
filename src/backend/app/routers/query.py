@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from app.models.query import ExecuteQueryRequest, QueryResultResponse
-from app.services.query import execute_query
+from app.models.query import (
+    ExecuteQueryRequest,
+    QueryResultResponse,
+    QueryHistoryRequest,
+    QueryHistoryResponse,
+)
+from app.services.query import execute_query, get_query_history
 
 router = APIRouter(prefix="/api/query", tags=["query"])
 
@@ -20,4 +25,18 @@ def execute(req: ExecuteQueryRequest) -> QueryResultResponse:
         raise HTTPException(
             status_code=500,
             detail=f"クエリが間違っています。\n原因：{str(e)}",
+        )
+
+
+@router.post("/history", response_model=QueryHistoryResponse)
+def history(req: QueryHistoryRequest) -> QueryHistoryResponse:
+    try:
+        columns, rows = get_query_history(
+            req.connection, req.database_name
+        )
+        return QueryHistoryResponse(columns=columns, rows=rows)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="クエリ履歴の取得中にエラーが発生しました",
         )

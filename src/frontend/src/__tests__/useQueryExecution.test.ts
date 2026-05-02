@@ -66,4 +66,41 @@ describe('useQueryExecution', () => {
       'クエリが間違っています。\n原因：syntax error'
     );
   });
+
+  it('fetchHistory returns history rows on success', async () => {
+    const mockHistoryResult = {
+      columns: ['id', 'executed_at', 'query_text'],
+      rows: [
+        { id: 1, executed_at: '2024-01-01 10:00:00', query_text: 'SELECT 1' },
+      ],
+    };
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockHistoryResult,
+    } as Response);
+
+    const { result } = renderHook(() => useQueryExecution());
+    let historyResult = null;
+    await act(async () => {
+      historyResult = await result.current.fetchHistory(mockConnInfo, 'testdb');
+    });
+    expect(historyResult).toEqual(mockHistoryResult);
+  });
+
+  it('fetchHistory returns null and alerts on failure', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: false,
+      json: async () => ({ detail: 'rireki.querylog does not exist' }),
+    } as Response);
+
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    const { result } = renderHook(() => useQueryExecution());
+    let historyResult = undefined;
+    await act(async () => {
+      historyResult = await result.current.fetchHistory(mockConnInfo, 'testdb');
+    });
+    expect(historyResult).toBeNull();
+    expect(alertSpy).toHaveBeenCalled();
+  });
 });

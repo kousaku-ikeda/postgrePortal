@@ -42,6 +42,7 @@ interface QueryTab {
   sql: string;
   queryResult: QueryResult | null;
   editorHeight: number;
+  isHistoryMode: boolean;
 }
 
 interface TabLabelProps {
@@ -139,6 +140,7 @@ const createTab = (): QueryTab => ({
   sql: '',
   queryResult: null,
   editorHeight: 220,
+  isHistoryMode: false,
 });
 
 const MainLayout: React.FC = () => {
@@ -146,7 +148,7 @@ const MainLayout: React.FC = () => {
   const { createDatabase, deleteDatabase } = useDatabaseOperations();
   const { fetchSchemas, createSchema, deleteSchema } = useSchemaOperations();
   const { fetchTables, createTable, deleteTable, fetchTableStructure } = useTableOperations();
-  const { executeQuery } = useQueryExecution();
+  const { executeQuery, fetchHistory } = useQueryExecution();
 
   const [selectedDb, setSelectedDb] = useState<string | null>(null);
   const [dbModalOpen, setDbModalOpen] = useState(false);
@@ -412,9 +414,39 @@ const MainLayout: React.FC = () => {
     const tabId = activeTabId;
     void executeQuery(connInfoRef.current, selectedDb, sql, limit).then((result) => {
       setTabs((prev) =>
-        prev.map((t) => (t.id === tabId ? { ...t, queryResult: result } : t))
+        prev.map((t) => (t.id === tabId ? { ...t, queryResult: result, isHistoryMode: false } : t))
       );
     });
+  };
+
+  const handleShowHistory = () => {
+    if (!selectedDb) {
+      alert('データベースを選択してください');
+      return;
+    }
+    const tabId = activeTabId;
+    void fetchHistory(connInfoRef.current, selectedDb).then((result) => {
+      if (result) {
+        setTabs((prev) =>
+          prev.map((t) =>
+            t.id === tabId
+              ? {
+                  ...t,
+                  queryResult: { columns: result.columns, rows: result.rows, affected_rows: null },
+                  isHistoryMode: true,
+                }
+              : t
+          )
+        );
+      }
+    });
+  };
+
+  const handleHistoryRowClick = (row: Record<string, string | number | null>) => {
+    const queryText = row['query_text'];
+    if (queryText !== null && queryText !== undefined) {
+      updateActiveTab({ sql: String(queryText) });
+    }
   };
 
   return (
@@ -563,6 +595,7 @@ const MainLayout: React.FC = () => {
               sql={activeTab.sql}
               onSqlChange={(sql) => updateActiveTab({ sql })}
               onExecute={handleExecuteQuery}
+              onShowHistory={handleShowHistory}
               affectedRows={activeTab.queryResult?.affected_rows ?? null}
               height={activeTab.editorHeight}
             />
@@ -579,6 +612,8 @@ const MainLayout: React.FC = () => {
             <ResultTable
               columns={activeTab.queryResult?.columns ?? []}
               rows={activeTab.queryResult?.rows ?? []}
+              isHistoryMode={activeTab.isHistoryMode}
+              onRowClick={handleHistoryRowClick}
             />
           </Box>
         </Box>

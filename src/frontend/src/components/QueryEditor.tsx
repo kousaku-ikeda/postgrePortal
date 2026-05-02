@@ -8,17 +8,19 @@ import {
   Chip,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import HistoryIcon from '@mui/icons-material/History';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 
 interface QueryEditorProps {
   sql: string;
   onSqlChange: (sql: string) => void;
   onExecute: (sql: string, limit: number) => void;
+  onShowHistory: () => void;
   affectedRows: number | null;
   height?: number;
 }
 
-const QueryEditor: React.FC<QueryEditorProps> = ({ sql, onSqlChange, onExecute, affectedRows, height }) => {
+const QueryEditor: React.FC<QueryEditorProps> = ({ sql, onSqlChange, onExecute, onShowHistory, affectedRows, height }) => {
   const [limit, setLimit] = useState('100');
   const [prevLimit, setPrevLimit] = useState('100');
 
@@ -132,6 +134,21 @@ const QueryEditor: React.FC<QueryEditorProps> = ({ sql, onSqlChange, onExecute, 
           }}
         >
           実行
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          startIcon={<HistoryIcon />}
+          onClick={onShowHistory}
+          data-testid="show-history-button"
+          sx={{
+            px: 3,
+            py: 0.8,
+            fontWeight: 700,
+            fontSize: '0.9rem',
+          }}
+        >
+          履歴を表示
         </Button>
         {affectedRows !== null && (
           <Chip

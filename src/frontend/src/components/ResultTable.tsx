@@ -15,13 +15,23 @@ import {
 interface ResultTableProps {
   columns: string[];
   rows: Record<string, string | number | null>[];
+  isHistoryMode?: boolean;
+  onRowClick?: (row: Record<string, string | number | null>) => void;
 }
 
 type SortOrder = 'asc' | 'desc';
 
+const formatExecutedAt = (value: string): string => {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (!match) return value;
+  return `${match[1]}/${match[2]}/${match[3]} ${match[4]}:${match[5]}:${match[6]}`;
+};
+
 const ResultTable: React.FC<ResultTableProps> = ({
   columns,
   rows,
+  isHistoryMode = false,
+  onRowClick,
 }) => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -117,6 +127,11 @@ const ResultTable: React.FC<ResultTableProps> = ({
               {sortedRows.map((row, idx) => (
                 <TableRow
                   key={idx}
+                  onClick={() => {
+                    if (isHistoryMode && onRowClick) {
+                      onRowClick(row);
+                    }
+                  }}
                   sx={{
                     '&:nth-of-type(even)': {
                       backgroundColor: '#fafafa',
@@ -125,6 +140,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
                       backgroundColor: '#e3f2fd',
                     },
                     transition: 'background-color 0.1s',
+                    cursor: isHistoryMode ? 'pointer' : 'default',
                   }}
                 >
                   {columns.map((col) => (
@@ -140,6 +156,8 @@ const ResultTable: React.FC<ResultTableProps> = ({
                         >
                           NULL
                         </Typography>
+                      ) : isHistoryMode && col === 'executed_at' ? (
+                        formatExecutedAt(String(row[col]))
                       ) : (
                         String(row[col])
                       )}

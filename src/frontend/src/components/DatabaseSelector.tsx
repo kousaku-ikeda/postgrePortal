@@ -45,10 +45,25 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
               value
             )
           }
-          sx={{ fontSize: '0.85rem' }}
+          sx={{
+            fontSize: '0.85rem',
+            ...(selectedDb ? { backgroundColor: '#FFFDE7' } : {}),
+          }}
         >
           {databases.map((db) => (
-            <MenuItem key={db} value={db} sx={{ fontSize: '0.85rem' }}>
+            <MenuItem
+              key={db}
+              value={db}
+              sx={{
+                fontSize: '0.85rem',
+                '&.Mui-selected': {
+                  backgroundColor: '#FFFDE7',
+                  '&:hover': {
+                    backgroundColor: '#FFFDE7',
+                  },
+                },
+              }}
+            >
               {db}
             </MenuItem>
           ))}
