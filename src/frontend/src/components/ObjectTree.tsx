@@ -22,6 +22,7 @@ interface ObjectTreeProps {
   onDeleteTable: (schemaName: string, tableName: string) => void;
   onClickTable: (schemaName: string, tableName: string) => void;
   onExpandSchema: (schemaName: string) => void;
+  onDragStart?: (schemaName: string, tableName: string) => void;
 }
 
 const ObjectTree: React.FC<ObjectTreeProps> = ({
@@ -32,6 +33,7 @@ const ObjectTree: React.FC<ObjectTreeProps> = ({
   onDeleteTable,
   onClickTable,
   onExpandSchema,
+  onDragStart,
 }) => {
   const [expandedSchemas, setExpandedSchemas] = useState<Set<string>>(
     new Set()
@@ -153,6 +155,18 @@ const ObjectTree: React.FC<ObjectTreeProps> = ({
                   <Box
                     key={table.name}
                     data-testid={`table-row-${schema.name}-${table.name}`}
+                    draggable
+                    onDragStart={(e) => {
+                      const dragData = JSON.stringify({
+                        schemaName: schema.name,
+                        tableName: table.name,
+                      });
+                      e.dataTransfer.setData('application/x-table-drag', dragData);
+                      e.dataTransfer.effectAllowed = 'copy';
+                      if (onDragStart) {
+                        onDragStart(schema.name, table.name);
+                      }
+                    }}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -160,8 +174,9 @@ const ObjectTree: React.FC<ObjectTreeProps> = ({
                       py: 0.25,
                       borderRadius: 1,
                       '&:hover': { backgroundColor: 'action.hover' },
-                      cursor: 'pointer',
-                      transition: 'background-color 0.15s',
+                      cursor: 'grab',
+                      transition: 'background-color 0.15s, opacity 0.2s',
+                      '&:active': { cursor: 'grabbing' },
                     }}
                   >
                     <Typography

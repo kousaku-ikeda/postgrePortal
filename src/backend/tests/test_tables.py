@@ -182,3 +182,42 @@ async def test_table_structure_success() -> None:
     assert len(data["indexes"]) == 1
     assert data["indexes"][0]["index_name"] == "test_pkey"
     assert data["indexes"][0]["is_unique"] is True
+
+
+@pytest.mark.asyncio
+async def test_table_structure_columns_ordered_by_ordinal_position() -> None:
+    """BE-07-01: columns array is returned in ordinal_position order."""
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    # Columns returned in ordinal_position order: id(1), name(2), email(3)
+    mock_cursor.fetchall.side_effect = [
+        [
+            ("id", "integer", "NO", None),
+            ("name", "text", "YES", None),
+            ("email", "character varying", "YES", None),
+        ],
+        [],  # No indexes
+    ]
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+    with patch("app.services.table.psycopg2.connect", return_value=mock_conn):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/tables/structure",
+                json={
+                    "connection": CONN_INFO,
+                    "database_name": "mydb",
+                    "schema_name": "public",
+                    "table_name": "test_table",
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    columns = data["columns"]
+    assert len(columns) == 3
+    assert columns[0]["column_name"] == "id"
+    assert columns[1]["column_name"] == "name"
+    assert columns[2]["column_name"] == "email"

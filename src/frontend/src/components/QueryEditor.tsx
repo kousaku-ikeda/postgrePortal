@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   TextField,
@@ -11,6 +11,11 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HistoryIcon from '@mui/icons-material/History';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 
+interface TableDragData {
+  schemaName: string;
+  tableName: string;
+}
+
 interface QueryEditorProps {
   sql: string;
   onSqlChange: (sql: string) => void;
@@ -18,11 +23,43 @@ interface QueryEditorProps {
   onShowHistory: () => void;
   affectedRows: number | null;
   height?: number;
+  onDropTable?: (schemaName: string, tableName: string) => void;
 }
 
-const QueryEditor: React.FC<QueryEditorProps> = ({ sql, onSqlChange, onExecute, onShowHistory, affectedRows, height }) => {
+const QueryEditor: React.FC<QueryEditorProps> = ({ sql, onSqlChange, onExecute, onShowHistory, affectedRows, height, onDropTable }) => {
   const [limit, setLimit] = useState('100');
   const [prevLimit, setPrevLimit] = useState('100');
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes('application/x-table-drag')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const raw = e.dataTransfer.getData('application/x-table-drag');
+      if (!raw) return;
+      try {
+        const data: TableDragData = JSON.parse(raw);
+        if (onDropTable) {
+          onDropTable(data.schemaName, data.tableName);
+        }
+      } catch {
+        // Invalid drag data - ignore
+      }
+    },
+    [onDropTable]
+  );
 
   const handleLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -71,6 +108,9 @@ const QueryEditor: React.FC<QueryEditorProps> = ({ sql, onSqlChange, onExecute, 
         placeholder="SELECT * FROM table_name;"
         value={sql}
         onChange={(e) => onSqlChange(e.target.value)}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         data-testid="sql-input"
         sx={{
           mb: 1.5,

@@ -101,4 +101,40 @@ describe('ObjectTree', () => {
     await userEvent.click(screen.getByText('users'));
     expect(mockClick).toHaveBeenCalledWith('public', 'users');
   });
+
+  // FE-07-01: table node has draggable attribute
+  it('table node has draggable attribute', async () => {
+    render(<ObjectTree schemas={mockSchemas} {...defaultProps} />);
+    await userEvent.click(screen.getByTestId('toggle-schema-public'));
+    const tableRow = screen.getByTestId('table-row-public-users');
+    expect(tableRow).toHaveAttribute('draggable', 'true');
+  });
+
+  // FE-07-02: schema node is not draggable
+  it('schema node is not draggable', () => {
+    render(<ObjectTree schemas={mockSchemas} {...defaultProps} />);
+    const schemaRow = screen.getByTestId('schema-row-public');
+    expect(schemaRow).not.toHaveAttribute('draggable', 'true');
+  });
+
+  // FE-07-03: calls onDragStart with schema and table name when table node drag starts
+  it('calls onDragStart with schema and table name when table node drag starts', async () => {
+    const mockDragStart = vi.fn();
+    render(
+      <ObjectTree schemas={mockSchemas} {...defaultProps} onDragStart={mockDragStart} />
+    );
+    await userEvent.click(screen.getByTestId('toggle-schema-public'));
+    const tableRow = screen.getByTestId('table-row-public-users');
+
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+    };
+
+    const dragStartEvent = new Event('dragstart', { bubbles: true });
+    Object.defineProperty(dragStartEvent, 'dataTransfer', { value: dataTransfer });
+    tableRow.dispatchEvent(dragStartEvent);
+
+    expect(mockDragStart).toHaveBeenCalledWith('public', 'users');
+  });
 });

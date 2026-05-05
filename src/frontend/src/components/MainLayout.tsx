@@ -442,6 +442,23 @@ const MainLayout: React.FC = () => {
     });
   };
 
+  const handleTableDrop = (schemaName: string, tableName: string) => {
+    if (!selectedDb) return;
+    void fetchTableStructure(connInfoRef.current, selectedDb, schemaName, tableName).then(
+      (structure) => {
+        if (structure && structure.columns.length > 0) {
+          const columnList = structure.columns
+            .map((col) => ` ${col.column_name}`)
+            .join(',\n');
+          const generatedSql = `select\n${columnList}\nfrom\n ${schemaName}.${tableName}`;
+          updateActiveTab({ sql: generatedSql });
+        } else if (structure && structure.columns.length === 0) {
+          alert('カラム情報が取得できませんでした');
+        }
+      }
+    );
+  };
+
   const handleHistoryRowClick = (row: Record<string, string | number | null>) => {
     const queryText = row['query_text'];
     if (queryText !== null && queryText !== undefined) {
@@ -598,6 +615,7 @@ const MainLayout: React.FC = () => {
               onShowHistory={handleShowHistory}
               affectedRows={activeTab.queryResult?.affected_rows ?? null}
               height={activeTab.editorHeight}
+              onDropTable={handleTableDrop}
             />
             <Box
               onMouseDown={handleDividerMouseDown}

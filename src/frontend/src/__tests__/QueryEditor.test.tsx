@@ -103,4 +103,88 @@ describe('QueryEditor', () => {
     await userEvent.click(screen.getByText('履歴を表示'));
     expect(mockShowHistory).toHaveBeenCalledTimes(1);
   });
+
+  // FE-07-04: SQL textarea accepts drop events
+  it('SQL textarea accepts drop events', () => {
+    const mockDropTable = vi.fn();
+    render(
+      <QueryEditor
+        sql=""
+        onSqlChange={vi.fn()}
+        onExecute={vi.fn()}
+        onShowHistory={vi.fn()}
+        affectedRows={null}
+        onDropTable={mockDropTable}
+      />
+    );
+    const sqlInput = screen.getByTestId('sql-input');
+
+    const dataTransfer = {
+      getData: vi.fn().mockReturnValue(JSON.stringify({ schemaName: 'public', tableName: 'users' })),
+      types: ['application/x-table-drag'],
+    };
+
+    const dropEvent = new Event('drop', { bubbles: true });
+    Object.defineProperty(dropEvent, 'dataTransfer', { value: dataTransfer });
+    Object.defineProperty(dropEvent, 'preventDefault', { value: vi.fn() });
+
+    sqlInput.dispatchEvent(dropEvent);
+    expect(mockDropTable).toHaveBeenCalled();
+  });
+
+  // FE-07-05: SQL textarea shows visual feedback on dragover
+  it('SQL textarea shows visual feedback on dragover', () => {
+    render(
+      <QueryEditor
+        sql=""
+        onSqlChange={vi.fn()}
+        onExecute={vi.fn()}
+        onShowHistory={vi.fn()}
+        affectedRows={null}
+        onDropTable={vi.fn()}
+      />
+    );
+    const sqlInput = screen.getByTestId('sql-input');
+
+    const preventDefaultMock = vi.fn();
+    const dataTransfer = {
+      types: ['application/x-table-drag'],
+      dropEffect: '',
+    };
+
+    const dragoverEvent = new Event('dragover', { bubbles: true, cancelable: true });
+    Object.defineProperty(dragoverEvent, 'dataTransfer', { value: dataTransfer });
+    Object.defineProperty(dragoverEvent, 'preventDefault', { value: preventDefaultMock });
+
+    sqlInput.dispatchEvent(dragoverEvent);
+    expect(preventDefaultMock).toHaveBeenCalled();
+  });
+
+  // FE-07-06: calls onDropTable with schema and table name when drop occurs
+  it('calls onDropTable with schema and table name when drop occurs', () => {
+    const mockDropTable = vi.fn();
+    render(
+      <QueryEditor
+        sql=""
+        onSqlChange={vi.fn()}
+        onExecute={vi.fn()}
+        onShowHistory={vi.fn()}
+        affectedRows={null}
+        onDropTable={mockDropTable}
+      />
+    );
+    const sqlInput = screen.getByTestId('sql-input');
+
+    const dataTransfer = {
+      getData: vi.fn().mockReturnValue(JSON.stringify({ schemaName: 'public', tableName: 'users' })),
+      types: ['application/x-table-drag'],
+    };
+
+    const dropEvent = new Event('drop', { bubbles: true });
+    Object.defineProperty(dropEvent, 'dataTransfer', { value: dataTransfer });
+    Object.defineProperty(dropEvent, 'preventDefault', { value: vi.fn() });
+
+    sqlInput.dispatchEvent(dropEvent);
+    expect(mockDropTable).toHaveBeenCalledWith('public', 'users');
+  });
 });
