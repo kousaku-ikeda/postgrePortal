@@ -54,6 +54,11 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
             <MenuItem
               key={db}
               value={db}
+              onClick={() => {
+                if (db === selectedDb) {
+                  onSelectDb(db);
+                }
+              }}
               sx={{
                 fontSize: '0.85rem',
                 '&.Mui-selected': {

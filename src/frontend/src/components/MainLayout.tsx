@@ -250,6 +250,17 @@ const MainLayout: React.FC = () => {
 
   const handleSelectDb = (name: string) => {
     setSelectedDb(name);
+
+    // Reset all tabs' content (sql, queryResult, isHistoryMode) on database switch
+    setTabs((prev) =>
+      prev.map((t) => ({
+        ...t,
+        sql: '',
+        queryResult: null,
+        isHistoryMode: false,
+      }))
+    );
+
     void fetchSchemas(connInfoRef.current, name).then((schemas) => {
       setDatabases(
         databases.map((db) =>
