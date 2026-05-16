@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   TextField,
@@ -7,10 +7,10 @@ import {
   Stack,
   Checkbox,
   FormControlLabel,
-} from '@mui/material';
-import DraggableModal from './DraggableModal';
-import type { SchemaFormData } from '../types/schema';
-import { initialSchemaFormData } from '../types/schema';
+} from "@mui/material";
+import DraggableModal from "./DraggableModal";
+import type { SchemaFormData } from "../types/schema";
+import { initialSchemaFormData } from "../types/schema";
 
 interface CreateSchemaModalProps {
   open: boolean;
@@ -25,14 +25,16 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
   onCreate,
   databaseName,
 }) => {
-  const [formData, setFormData] = useState<SchemaFormData>(initialSchemaFormData);
+  const [formData, setFormData] = useState<SchemaFormData>(
+    initialSchemaFormData,
+  );
   const [nameError, setNameError] = useState(false);
 
   const handleChange =
-    (field: keyof Omit<SchemaFormData, 'ifNotExists'>) =>
+    (field: keyof Omit<SchemaFormData, "ifNotExists">) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-      if (field === 'schema_name' && nameError) {
+      if (field === "schema_name" && nameError) {
         setNameError(false);
       }
     };
@@ -43,6 +45,11 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
       return;
     }
     onCreate(formData);
+  };
+
+  const handleClear = () => {
+    setFormData(initialSchemaFormData);
+    setNameError(false);
   };
 
   const handleCancel = () => {
@@ -59,16 +66,16 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
       width={480}
     >
       {/* Action buttons */}
-      <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+      <Box sx={{ display: "flex", gap: 1.5, mb: 3 }}>
         <Button
           variant="contained"
           onClick={handleCreate}
           sx={{
             px: 3,
             fontWeight: 700,
-            background: 'linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #42a5f5 0%, #2196f3 100%)',
+            background: "linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #42a5f5 0%, #2196f3 100%)",
             },
           }}
         >
@@ -76,14 +83,29 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
         </Button>
         <Button
           variant="contained"
+          onClick={handleClear}
+          sx={{
+            px: 3,
+            fontWeight: 700,
+            color: "#1a2027",
+            background: "linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%)",
+            },
+          }}
+        >
+          クリア
+        </Button>
+        <Button
+          variant="contained"
           onClick={handleCancel}
           sx={{
             px: 3,
             fontWeight: 700,
-            color: '#1a2027',
-            background: 'linear-gradient(135deg, #ffca28 0%, #ffb300 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #ffc107 0%, #ffa000 100%)',
+            color: "#1a2027",
+            background: "linear-gradient(135deg, #ffca28 0%, #ffb300 100%)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #ffc107 0%, #ffa000 100%)",
             },
           }}
         >
@@ -93,12 +115,12 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
 
       {/* Form fields */}
       <Stack spacing={2}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Typography
             variant="body2"
             sx={{
               width: 130,
-              textAlign: 'right',
+              textAlign: "right",
               fontWeight: 500,
               flexShrink: 0,
             }}
@@ -107,16 +129,16 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
           </Typography>
           <TextField
             value={formData.schema_name}
-            onChange={handleChange('schema_name')}
+            onChange={handleChange("schema_name")}
             fullWidth
             error={nameError}
-            helperText={nameError ? 'Required field' : undefined}
+            helperText={nameError ? "Required field" : undefined}
           />
           <Typography
             sx={{
-              color: 'error.main',
+              color: "error.main",
               fontWeight: 700,
-              fontSize: '1.1rem',
+              fontSize: "1.1rem",
               flexShrink: 0,
             }}
           >
@@ -124,12 +146,12 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Typography
             variant="body2"
             sx={{
               width: 130,
-              textAlign: 'right',
+              textAlign: "right",
               fontWeight: 500,
               flexShrink: 0,
             }}
@@ -138,18 +160,18 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
           </Typography>
           <TextField
             value={formData.user_name}
-            onChange={handleChange('user_name')}
+            onChange={handleChange("user_name")}
             fullWidth
           />
           <Box sx={{ width: 14, flexShrink: 0 }} />
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Typography
             variant="body2"
             sx={{
               width: 130,
-              textAlign: 'right',
+              textAlign: "right",
               fontWeight: 500,
               flexShrink: 0,
             }}
@@ -158,18 +180,18 @@ const CreateSchemaModal: React.FC<CreateSchemaModalProps> = ({
           </Typography>
           <TextField
             value={formData.schema_element}
-            onChange={handleChange('schema_element')}
+            onChange={handleChange("schema_element")}
             fullWidth
           />
           <Box sx={{ width: 14, flexShrink: 0 }} />
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Typography
             variant="body2"
             sx={{
               width: 130,
-              textAlign: 'right',
+              textAlign: "right",
               fontWeight: 500,
               flexShrink: 0,
             }}
