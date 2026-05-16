@@ -482,6 +482,7 @@ const MainLayout: React.FC = () => {
                     columns: result.columns,
                     rows: result.rows,
                     affected_rows: null,
+                    column_types: [],
                   },
                   isHistoryMode: true,
                 }
@@ -557,7 +558,9 @@ const MainLayout: React.FC = () => {
         </AppBar>
 
         {/* Main content */}
-        <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <Box
+          sx={{ display: "flex", flex: 1, overflow: "hidden", minHeight: 0 }}
+        >
           {/* Left pane */}
           <Box
             data-testid="left-pane"
@@ -600,9 +603,9 @@ const MainLayout: React.FC = () => {
           {/* Right pane */}
           <Box
             data-testid="right-pane"
-            ref={resizableContainerRef}
             sx={{
               flex: 1,
+              minHeight: 0,
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -665,50 +668,63 @@ const MainLayout: React.FC = () => {
               </Tabs>
             </Box>
 
-            {/* Active tab content - resizable layout */}
+            {/* Resizable area (excludes tab bar so useResizable measures correct height) */}
             <Box
+              ref={resizableContainerRef}
               sx={{
-                ...(topHeight !== null
-                  ? { height: topHeight, flexShrink: 0 }
-                  : { flex: "0 0 30%" }),
-                overflow: "hidden",
+                flex: 1,
+                minHeight: 0,
                 display: "flex",
                 flexDirection: "column",
-              }}
-            >
-              <QueryEditor
-                sql={activeTab.sql}
-                onSqlChange={(sql) => updateActiveTab({ sql })}
-                onExecute={handleExecuteQuery}
-                onShowHistory={handleShowHistory}
-                affectedRows={activeTab.queryResult?.affected_rows ?? null}
-                height={topHeight ?? undefined}
-                onDropTable={handleTableDrop}
-              />
-            </Box>
-
-            <ResizableSplitter
-              onMouseDown={splitterProps.onMouseDown}
-              isDragging={isResizing}
-            />
-
-            <Box
-              sx={{
-                ...(bottomHeight !== null
-                  ? { height: bottomHeight, flexShrink: 0 }
-                  : { flex: 1 }),
                 overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
               }}
             >
-              <ResultTable
-                columns={activeTab.queryResult?.columns ?? []}
-                rows={activeTab.queryResult?.rows ?? []}
-                isHistoryMode={activeTab.isHistoryMode}
-                onRowClick={handleHistoryRowClick}
-                height={bottomHeight ?? undefined}
+              {/* Active tab content - resizable layout */}
+              <Box
+                sx={{
+                  ...(topHeight !== null
+                    ? { height: topHeight, flexShrink: 0 }
+                    : { flex: "0 0 30%" }),
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <QueryEditor
+                  sql={activeTab.sql}
+                  onSqlChange={(sql) => updateActiveTab({ sql })}
+                  onExecute={handleExecuteQuery}
+                  onShowHistory={handleShowHistory}
+                  affectedRows={activeTab.queryResult?.affected_rows ?? null}
+                  height={topHeight ?? undefined}
+                  onDropTable={handleTableDrop}
+                />
+              </Box>
+
+              <ResizableSplitter
+                onMouseDown={splitterProps.onMouseDown}
+                isDragging={isResizing}
               />
+
+              <Box
+                sx={{
+                  ...(bottomHeight !== null
+                    ? { height: bottomHeight, flexShrink: 0 }
+                    : { flex: 1, minHeight: 0 }),
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <ResultTable
+                  columns={activeTab.queryResult?.columns ?? []}
+                  rows={activeTab.queryResult?.rows ?? []}
+                  isHistoryMode={activeTab.isHistoryMode}
+                  onRowClick={handleHistoryRowClick}
+                  height={bottomHeight ?? undefined}
+                  columnTypes={activeTab.queryResult?.column_types ?? []}
+                />
+              </Box>
             </Box>
           </Box>
         </Box>

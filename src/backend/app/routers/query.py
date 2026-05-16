@@ -13,13 +13,14 @@ router = APIRouter(prefix="/api/query", tags=["query"])
 @router.post("/execute", response_model=QueryResultResponse)
 def execute(req: ExecuteQueryRequest) -> QueryResultResponse:
     try:
-        columns, rows, affected_rows = execute_query(
+        columns, rows, affected_rows, column_types = execute_query(
             req.connection, req.database_name, req.sql, req.limit
         )
         return QueryResultResponse(
             columns=columns,
             rows=rows,
             affected_rows=affected_rows,
+            column_types=column_types,
         )
     except Exception as e:
         raise HTTPException(

@@ -99,6 +99,84 @@ async def test_execute_query_failure() -> None:
 
 
 @pytest.mark.asyncio
+async def test_execute_select_query_returns_column_types() -> None:
+    """column_types should contain PostgreSQL type names for each column."""
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    # description: (name, type_code, display_size, internal_size, precision, scale, null_ok)
+    mock_cursor.description = [
+        ("id", 23, None, None, None, None, None),       # int4 OID=23
+        ("embedding", 99999, None, None, None, None, None),  # custom type
+    ]
+    mock_cursor.fetchmany.return_value = [(1, "[0.1,0.2,0.3]")]
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+    # Second cursor for type query
+    mock_type_cursor = MagicMock()
+    mock_type_cursor.fetchall.return_value = [(23, "int4"), (99999, "vector")]
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+
+    # We need to handle multiple cursor contexts. Let's use side_effect.
+    cursor_cm_1 = MagicMock()
+    cursor_cm_1.__enter__ = MagicMock(return_value=mock_cursor)
+    cursor_cm_1.__exit__ = MagicMock(return_value=False)
+
+    cursor_cm_2 = MagicMock()
+    cursor_cm_2.__enter__ = MagicMock(return_value=mock_type_cursor)
+    cursor_cm_2.__exit__ = MagicMock(return_value=False)
+
+    mock_conn.cursor.side_effect = [cursor_cm_1, cursor_cm_2]
+
+    with patch("app.services.query.psycopg2.connect", return_value=mock_conn):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/query/execute",
+                json={
+                    "connection": CONN_INFO,
+                    "database_name": "mydb",
+                    "sql": "SELECT id, embedding FROM items",
+                    "limit": 100,
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "column_types" in data
+    assert data["column_types"] == ["int4", "vector"]
+
+
+@pytest.mark.asyncio
+async def test_execute_non_select_query_returns_empty_column_types() -> None:
+    """Non-SELECT queries should return empty column_types."""
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.description = None
+    type(mock_cursor).rowcount = PropertyMock(return_value=3)
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+    with patch("app.services.query.psycopg2.connect", return_value=mock_conn):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.post(
+                "/api/query/execute",
+                json={
+                    "connection": CONN_INFO,
+                    "database_name": "mydb",
+                    "sql": "UPDATE users SET name='test'",
+                    "limit": 100,
+                },
+            )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "column_types" in data
+    assert data["column_types"] == []
+
+
+@pytest.mark.asyncio
 async def test_execute_query_default_limit() -> None:
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
