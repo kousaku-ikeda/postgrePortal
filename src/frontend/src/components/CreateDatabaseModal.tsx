@@ -1,14 +1,8 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Stack,
-} from '@mui/material';
-import DraggableModal from './DraggableModal';
-import type { DatabaseFormData } from '../types/database';
-import { initialDatabaseFormData } from '../types/database';
+import React, { useState } from "react";
+import { Box, TextField, Button, Typography, Stack } from "@mui/material";
+import DraggableModal from "./DraggableModal";
+import type { DatabaseFormData } from "../types/database";
+import { initialDatabaseFormData } from "../types/database";
 
 interface CreateDatabaseModalProps {
   open: boolean;
@@ -21,14 +15,16 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
   onClose,
   onCreate,
 }) => {
-  const [formData, setFormData] = useState<DatabaseFormData>(initialDatabaseFormData);
+  const [formData, setFormData] = useState<DatabaseFormData>(
+    initialDatabaseFormData,
+  );
   const [nameError, setNameError] = useState(false);
 
   const handleChange =
     (field: keyof DatabaseFormData) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-      if (field === 'name' && nameError) {
+      if (field === "name" && nameError) {
         setNameError(false);
       }
     };
@@ -39,6 +35,11 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
       return;
     }
     onCreate(formData);
+  };
+
+  const handleClear = () => {
+    setFormData(initialDatabaseFormData);
+    setNameError(false);
   };
 
   const handleCancel = () => {
@@ -52,14 +53,14 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
     label: string;
     required: boolean;
   }> = [
-    { key: 'name', label: 'name', required: true },
-    { key: 'user_name', label: 'user_name', required: false },
-    { key: 'template', label: 'template', required: false },
-    { key: 'encoding', label: 'encoding', required: false },
-    { key: 'lc_collate', label: 'lc_collate', required: false },
-    { key: 'lc_ctype', label: 'lc_ctype', required: false },
-    { key: 'tablespace_name', label: 'tablespace_name', required: false },
-    { key: 'connlimit', label: 'connlimit', required: false },
+    { key: "name", label: "name", required: true },
+    { key: "user_name", label: "user_name", required: false },
+    { key: "template", label: "template", required: false },
+    { key: "encoding", label: "encoding", required: false },
+    { key: "lc_collate", label: "lc_collate", required: false },
+    { key: "lc_ctype", label: "lc_ctype", required: false },
+    { key: "tablespace_name", label: "tablespace_name", required: false },
+    { key: "connlimit", label: "connlimit", required: false },
   ];
 
   return (
@@ -70,17 +71,32 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
       width={520}
     >
       {/* Action buttons */}
-      <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+      <Box sx={{ display: "flex", gap: 1.5, mb: 3 }}>
         <Button
           variant="contained"
           onClick={handleCreate}
           sx={{
             px: 3,
             fontWeight: 700,
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+            background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
           }}
         >
           作成
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleClear}
+          sx={{
+            px: 3,
+            fontWeight: 700,
+            color: "#1a2027",
+            background: "linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%)",
+            },
+          }}
+        >
+          クリア
         </Button>
         <Button
           variant="contained"
@@ -88,10 +104,10 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
           sx={{
             px: 3,
             fontWeight: 700,
-            color: '#1a2027',
-            background: 'linear-gradient(135deg, #ffca28 0%, #ffb300 100%)',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #ffc107 0%, #ffa000 100%)',
+            color: "#1a2027",
+            background: "linear-gradient(135deg, #ffca28 0%, #ffb300 100%)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #ffc107 0%, #ffa000 100%)",
             },
           }}
         >
@@ -104,23 +120,23 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
         {fields.map(({ key, label, required }) => (
           <Box
             key={key}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}
+            sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
           >
             <Typography
               variant="body2"
               sx={{
                 width: 140,
-                textAlign: 'right',
+                textAlign: "right",
                 fontWeight: 500,
                 flexShrink: 0,
                 color: [
-                  'user_name',
-                  'encoding',
-                  'lc_collate',
-                  'lc_ctype',
+                  "user_name",
+                  "encoding",
+                  "lc_collate",
+                  "lc_ctype",
                 ].includes(key)
-                  ? 'primary.main'
-                  : 'text.primary',
+                  ? "primary.main"
+                  : "text.primary",
               }}
             >
               {label}
@@ -129,17 +145,17 @@ const CreateDatabaseModal: React.FC<CreateDatabaseModalProps> = ({
               value={formData[key]}
               onChange={handleChange(key)}
               fullWidth
-              error={key === 'name' && nameError}
+              error={key === "name" && nameError}
               helperText={
-                key === 'name' && nameError ? 'Required field' : undefined
+                key === "name" && nameError ? "Required field" : undefined
               }
             />
             {required && (
               <Typography
                 sx={{
-                  color: 'error.main',
+                  color: "error.main",
                   fontWeight: 700,
-                  fontSize: '1.1rem',
+                  fontSize: "1.1rem",
                   flexShrink: 0,
                 }}
               >
