@@ -14,6 +14,7 @@ class QueryResultResponse(BaseModel):
     columns: list[str]
     rows: list[dict[str, object]]
     affected_rows: Optional[int] = None
+    column_types: list[str] = []
 
 
 class QueryHistoryRequest(BaseModel):
